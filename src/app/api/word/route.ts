@@ -65,13 +65,14 @@ export async function GET(req: NextRequest) {
 
     // Palavras a evitar (vêm do cookie + query opcional "avoid")
     const recentCookie = req.cookies.get('recent_words')?.value || '[]';
-    let recentList: string[] = [];
-    try { recentList = JSON.parse(recentCookie); } catch { recentList = []; }
-    recentList = Array.isArray(recentList) ? recentList.map(normalizeWord).filter(Boolean) : [];
+    const recentList: string[] = (() => {
+      try { return JSON.parse(recentCookie); } catch { return []; }
+    })();
+    const normalizedRecent = Array.isArray(recentList) ? recentList.map(normalizeWord).filter(Boolean) : [];
 
     const avoidParam = searchParams.get('avoid');
     const avoidFromQuery = avoidParam ? avoidParam.split(',').map(normalizeWord).filter(Boolean) : [];
-    const avoidSet = new Set<string>([...recentList, ...avoidFromQuery]);
+    const avoidSet = new Set<string>([...normalizedRecent, ...avoidFromQuery]);
 
     const lenRange = difficulty === 'facil' ? '4-7' : difficulty === 'dificil' ? '10-14' : '7-10';
     const [minS, maxS] = lenRange.split('-');
@@ -103,7 +104,7 @@ export async function GET(req: NextRequest) {
           !avoidSet.has(word)
         ) {
           // Atualiza cookie de recentes (máx. 20)
-          const nextRecent = [word, ...recentList.filter((w) => w !== word)].slice(0, 20);
+          const nextRecent = [word, ...normalizedRecent.filter((w) => w !== word)].slice(0, 20);
           const response = NextResponse.json({ word, hint });
           response.cookies.set('recent_words', JSON.stringify(nextRecent), {
             httpOnly: false,
