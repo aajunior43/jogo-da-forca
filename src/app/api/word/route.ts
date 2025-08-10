@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     const topicDesc = TOPIC_HINTS[rawTopic] || `tema ${rawTopic}`;
 
     // Palavras a evitar (vêm do cookie + query opcional "avoid")
-    let recentCookie = req.cookies.get('recent_words')?.value || '[]';
+    const recentCookie = req.cookies.get('recent_words')?.value || '[]';
     let recentList: string[] = [];
     try { recentList = JSON.parse(recentCookie); } catch { recentList = []; }
     recentList = Array.isArray(recentList) ? recentList.map(normalizeWord).filter(Boolean) : [];
@@ -92,8 +92,8 @@ export async function GET(req: NextRequest) {
 
       try {
         const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(text);
-        let word: string = normalizeWord((parsed.word || '').toString());
-        let hint: string = (parsed.hint || '').toString();
+        const word: string = normalizeWord((parsed.word || '').toString());
+        const hint: string = (parsed.hint || '').toString();
         const pureLen = word.replace(/ /g, '').length;
 
         // Regras de tamanho e repetição
@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
           });
           return response;
         }
-      } catch (_e) {
+      } catch {
         // tenta novamente
       }
     }

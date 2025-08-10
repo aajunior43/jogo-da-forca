@@ -5,12 +5,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 type GameState = 'idle' | 'playing' | 'won' | 'lost';
 
 const MAX_ERRORS = 6;
-const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const KEYBOARD_ROWS: string[][] = [
   'QWERTYUIOP'.split(''),
   'ASDFGHJKL'.split(''),
   'ZXCVBNM'.split(''),
 ];
+
+// Type for navigator to handle vibrate API safely
+interface NavigatorWithVibrate extends Navigator {
+  vibrate?: (pattern: number | number[]) => boolean;
+}
 
 async function fetchWord(difficulty: string, topic: string, avoid?: string[]): Promise<{ word: string; hint: string }> {
   const params = new URLSearchParams({ difficulty, topic });
@@ -95,7 +99,7 @@ export default function ForcaPage() {
       const isCorrect = normalizedSecret.includes(L);
       if (!isCorrect && typeof navigator !== 'undefined' && 'vibrate' in navigator) {
         try {
-          (navigator as any).vibrate?.(60);
+          (navigator as NavigatorWithVibrate).vibrate?.(60);
         } catch {}
       }
 
@@ -110,7 +114,7 @@ export default function ForcaPage() {
       } else if (errors >= MAX_ERRORS) {
         setState('lost');
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-          try { (navigator as any).vibrate?.([80, 40, 80]); } catch {}
+          try { (navigator as NavigatorWithVibrate).vibrate?.([80, 40, 80]); } catch {}
         }
       }
     },
@@ -174,7 +178,7 @@ export default function ForcaPage() {
         return next;
       });
       if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { (navigator as any).vibrate?.(60); } catch {}
+        try { (navigator as NavigatorWithVibrate).vibrate?.(60); } catch {}
       }
     }
     setWordInput('');
@@ -198,7 +202,7 @@ export default function ForcaPage() {
                 className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm"
                 value={difficulty}
                 onChange={(e) => {
-                  setDifficulty(e.target.value as any);
+                  setDifficulty(e.target.value as 'facil' | 'medio' | 'dificil');
                   if (state === 'idle') newGame();
                 }}
               >
@@ -321,7 +325,7 @@ export default function ForcaPage() {
               {/* Estado do jogo */}
               <div className="text-center">
                 {state === 'idle' ? (
-                  <p className="text-slate-500">🎯 Clique em "Novo jogo" para começar</p>
+                  <p className="text-slate-500">🎯 Clique em &quot;Novo jogo&quot; para começar</p>
                 ) : (
                   <div>
                     <p
