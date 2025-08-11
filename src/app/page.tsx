@@ -146,12 +146,18 @@ export default function ForcaPage() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || (target as HTMLElement & { isContentEditable?: boolean }).isContentEditable)) {
+        return;
+      }
       const key = e.key.toUpperCase();
       if (/^[A-Z]$/.test(key)) {
         e.preventDefault();
         guess(key);
+      } else if (key === 'ENTER' && state !== 'playing') {
+        e.preventDefault();
+        newGame();
       }
-      if (key === 'ENTER' && state !== 'playing') newGame();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
